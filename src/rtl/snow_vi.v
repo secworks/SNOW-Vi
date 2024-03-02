@@ -132,7 +132,7 @@ module aes(
 
                     .key(core_key),
 
-                    .result(core_result)
+                    .keystream(core_result)
 		   );
 
 
@@ -203,7 +203,6 @@ module aes(
                 ADDR_NAME0:   tmp_read_data = CORE_NAME0;
                 ADDR_NAME1:   tmp_read_data = CORE_NAME1;
                 ADDR_VERSION: tmp_read_data = CORE_VERSION;
-                ADDR_CTRL:    tmp_read_data = {28'h0, keylen_reg, encdec_reg, next_reg, init_reg};
                 ADDR_STATUS:  tmp_read_data = {31'h0, ready_reg};
 
                 default:

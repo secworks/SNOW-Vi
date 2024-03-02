@@ -101,8 +101,8 @@ module snow_vi_core(
   //----------------------------------------------------------------
   wire [127 : 0] tmp_keystream;
 
-  reg [127 : 0] t1;
-  reg [127 : 0] t2;
+  wire [127 : 0] t1;
+  wire [127 : 0] t2;
 
 
   //----------------------------------------------------------------
@@ -130,8 +130,8 @@ module snow_vi_core(
       integer i;
       if (!reset_n) begin
         for (i = 0 ; i < 16 ; i = i + 1) begin
-          lfsr_a_reg <= 16'h0;
-          lfsr_b_reg <= 16'h0;
+          lfsr_a_reg[i] <= 16'h0;
+          lfsr_b_reg[i] <= 16'h0;
         end
 
         ready_reg             <= 1'h0;
@@ -158,23 +158,6 @@ module snow_vi_core(
         if (snow_vi_core_ctrl_we) begin
           snow_vi_core_ctrl_reg <= snow_vi_core_ctrl_new;
 	end
-      end
-    end
-
-
-  //----------------------------------------------------------------
-  // t1_t2_extract
-  //
-  // Extract 128 bit state from lfsr_a and lfsr_b into the
-  // t1 and t2 vectors.
-  //----------------------------------------------------------------
-  always @*
-    begin : t1_t2_extract
-      integer i;
-
-      for (i = 0 ; i < 16 ; i = i + 1) begin
-	t1[(((i + 1) * 8) - 1) : (i * 8)] = lfsr_b_reg[i];
-	t2[(((i + 1) * 8) - 1) : (i * 8)] = lfsr_a_reg[i];
       end
     end
 
