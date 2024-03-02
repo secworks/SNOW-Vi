@@ -1,14 +1,14 @@
 //======================================================================
 //
-// aes_encipher_block.v
-// --------------------
-// The AES encipher round. A pure combinational module that implements
-// the initial round, main round and final round logic for
+// snow_vi_aes_round.v
+// -------------------
+// The AES encipher round.
+// TODO: Aff Link.
 // enciper operations.
 //
 //
 // Author: Joachim Strombergson
-// Copyright (c) 2013, 2014, Secworks Sweden AB
+// Copyright (c) 2024, Assured AB
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or
@@ -41,23 +41,10 @@
 `default_nettype none
 
 module aes_encipher_block(
-                          input wire            clk,
-                          input wire            reset_n,
-
-                          input wire            next,
-
-                          input wire            keylen,
-                          output wire [3 : 0]   round,
                           input wire [127 : 0]  round_key,
-
-                          output wire [31 : 0]  sboxw,
-                          input wire  [31 : 0]  new_sboxw,
-
                           input wire [127 : 0]  block,
-                          output wire [127 : 0] new_block,
-                          output wire           ready
+                          output wire [127 : 0] new_block
                          );
-
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -156,329 +143,326 @@ module aes_encipher_block(
   endfunction // addroundkey
 
 
-  //----------------------------------------------------------------
-  // Registers including update variables and write enable.
-  //----------------------------------------------------------------
-  reg [1 : 0]   sword_ctr_reg;
-  reg [1 : 0]   sword_ctr_new;
-  reg           sword_ctr_we;
-  reg           sword_ctr_inc;
-  reg           sword_ctr_rst;
-
-  reg [3 : 0]   round_ctr_reg;
-  reg [3 : 0]   round_ctr_new;
-  reg           round_ctr_we;
-  reg           round_ctr_rst;
-  reg           round_ctr_inc;
-
-  reg [127 : 0] block_new;
-  reg [31 : 0]  block_w0_reg;
-  reg [31 : 0]  block_w1_reg;
-  reg [31 : 0]  block_w2_reg;
-  reg [31 : 0]  block_w3_reg;
-  reg           block_w0_we;
-  reg           block_w1_we;
-  reg           block_w2_we;
-  reg           block_w3_we;
-
-  reg           ready_reg;
-  reg           ready_new;
-  reg           ready_we;
-
-  reg [1 : 0]   enc_ctrl_reg;
-  reg [1 : 0]   enc_ctrl_new;
-  reg           enc_ctrl_we;
-
-
-  //----------------------------------------------------------------
-  // Wires.
-  //----------------------------------------------------------------
-  reg [2 : 0]  update_type;
-  reg [31 : 0] muxed_sboxw;
-
-
-  //----------------------------------------------------------------
-  // Concurrent connectivity for ports etc.
-  //----------------------------------------------------------------
-  assign round     = round_ctr_reg;
-  assign sboxw     = muxed_sboxw;
-  assign new_block = {block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg};
-  assign ready     = ready_reg;
-
-
-  //----------------------------------------------------------------
-  // reg_update
-  //
-  // Update functionality for all registers in the core.
-  // All registers are positive edge triggered with asynchronous
-  // active low reset. All registers have write enable.
-  //----------------------------------------------------------------
-  always @ (posedge clk or negedge reset_n)
-    begin: reg_update
-      if (!reset_n)
-        begin
-          block_w0_reg  <= 32'h0;
-          block_w1_reg  <= 32'h0;
-          block_w2_reg  <= 32'h0;
-          block_w3_reg  <= 32'h0;
-          sword_ctr_reg <= 2'h0;
-          round_ctr_reg <= 4'h0;
-          ready_reg     <= 1'b1;
-          enc_ctrl_reg  <= CTRL_IDLE;
-        end
-      else
-        begin
-          if (block_w0_we)
-            block_w0_reg <= block_new[127 : 096];
-
-          if (block_w1_we)
-            block_w1_reg <= block_new[095 : 064];
-
-          if (block_w2_we)
-            block_w2_reg <= block_new[063 : 032];
-
-          if (block_w3_we)
-            block_w3_reg <= block_new[031 : 000];
-
-          if (sword_ctr_we)
-            sword_ctr_reg <= sword_ctr_new;
-
-          if (round_ctr_we)
-            round_ctr_reg <= round_ctr_new;
-
-          if (ready_we)
-            ready_reg <= ready_new;
-
-          if (enc_ctrl_we)
-            enc_ctrl_reg <= enc_ctrl_new;
-        end
-    end // reg_update
-
-
-  //----------------------------------------------------------------
-  // round_logic
-  //
-  // The logic needed to implement init, main and final rounds.
-  //----------------------------------------------------------------
-  always @*
-    begin : round_logic
-      reg [127 : 0] old_block, shiftrows_block, mixcolumns_block;
-      reg [127 : 0] addkey_init_block, addkey_main_block, addkey_final_block;
-
-      block_new   = 128'h0;
-      muxed_sboxw = 32'h0;
-      block_w0_we = 1'b0;
-      block_w1_we = 1'b0;
-      block_w2_we = 1'b0;
-      block_w3_we = 1'b0;
-
-      old_block          = {block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg};
-      shiftrows_block    = shiftrows(old_block);
-      mixcolumns_block   = mixcolumns(shiftrows_block);
-      addkey_init_block  = addroundkey(block, round_key);
-      addkey_main_block  = addroundkey(mixcolumns_block, round_key);
-      addkey_final_block = addroundkey(shiftrows_block, round_key);
-
-      case (update_type)
-        INIT_UPDATE:
-          begin
-            block_new    = addkey_init_block;
-            block_w0_we  = 1'b1;
-            block_w1_we  = 1'b1;
-            block_w2_we  = 1'b1;
-            block_w3_we  = 1'b1;
-          end
-
-        SBOX_UPDATE:
-          begin
-            block_new = {new_sboxw, new_sboxw, new_sboxw, new_sboxw};
-
-            case (sword_ctr_reg)
-              2'h0:
-                begin
-                  muxed_sboxw = block_w0_reg;
-                  block_w0_we = 1'b1;
-                end
-
-              2'h1:
-                begin
-                  muxed_sboxw = block_w1_reg;
-                  block_w1_we = 1'b1;
-                end
-
-              2'h2:
-                begin
-                  muxed_sboxw = block_w2_reg;
-                  block_w2_we = 1'b1;
-                end
-
-              2'h3:
-                begin
-                  muxed_sboxw = block_w3_reg;
-                  block_w3_we = 1'b1;
-                end
-            endcase // case (sbox_mux_ctrl_reg)
-          end
-
-        MAIN_UPDATE:
-          begin
-            block_new    = addkey_main_block;
-            block_w0_we  = 1'b1;
-            block_w1_we  = 1'b1;
-            block_w2_we  = 1'b1;
-            block_w3_we  = 1'b1;
-          end
-
-        FINAL_UPDATE:
-          begin
-            block_new    = addkey_final_block;
-            block_w0_we  = 1'b1;
-            block_w1_we  = 1'b1;
-            block_w2_we  = 1'b1;
-            block_w3_we  = 1'b1;
-          end
-
-        default:
-          begin
-          end
-      endcase // case (update_type)
-    end // round_logic
-
-
-  //----------------------------------------------------------------
-  // sword_ctr
-  //
-  // The subbytes word counter with reset and increase logic.
-  //----------------------------------------------------------------
-  always @*
-    begin : sword_ctr
-      sword_ctr_new = 2'h0;
-      sword_ctr_we  = 1'b0;
-
-      if (sword_ctr_rst)
-        begin
-          sword_ctr_new = 2'h0;
-          sword_ctr_we  = 1'b1;
-        end
-      else if (sword_ctr_inc)
-        begin
-          sword_ctr_new = sword_ctr_reg + 1'b1;
-          sword_ctr_we  = 1'b1;
-        end
-    end // sword_ctr
-
-
-  //----------------------------------------------------------------
-  // round_ctr
-  //
-  // The round counter with reset and increase logic.
-  //----------------------------------------------------------------
-  always @*
-    begin : round_ctr
-      round_ctr_new = 4'h0;
-      round_ctr_we  = 1'b0;
-
-      if (round_ctr_rst)
-        begin
-          round_ctr_new = 4'h0;
-          round_ctr_we  = 1'b1;
-        end
-      else if (round_ctr_inc)
-        begin
-          round_ctr_new = round_ctr_reg + 1'b1;
-          round_ctr_we  = 1'b1;
-        end
-    end // round_ctr
-
-
-  //----------------------------------------------------------------
-  // encipher_ctrl
-  //
-  // The FSM that controls the encipher operations.
-  //----------------------------------------------------------------
-  always @*
-    begin: encipher_ctrl
-      reg [3 : 0] num_rounds;
-
-      // Default assignments.
-      sword_ctr_inc = 1'b0;
-      sword_ctr_rst = 1'b0;
-      round_ctr_inc = 1'b0;
-      round_ctr_rst = 1'b0;
-      ready_new     = 1'b0;
-      ready_we      = 1'b0;
-      update_type   = NO_UPDATE;
-      enc_ctrl_new  = CTRL_IDLE;
-      enc_ctrl_we   = 1'b0;
-
-      if (keylen == AES_256_BIT_KEY)
-        begin
-          num_rounds = AES256_ROUNDS;
-        end
-      else
-        begin
-          num_rounds = AES128_ROUNDS;
-        end
-
-      case(enc_ctrl_reg)
-        CTRL_IDLE:
-          begin
-            if (next)
-              begin
-                round_ctr_rst = 1'b1;
-                ready_new     = 1'b0;
-                ready_we      = 1'b1;
-                enc_ctrl_new  = CTRL_INIT;
-                enc_ctrl_we   = 1'b1;
-              end
-          end
-
-        CTRL_INIT:
-          begin
-            round_ctr_inc = 1'b1;
-            sword_ctr_rst = 1'b1;
-            update_type   = INIT_UPDATE;
-            enc_ctrl_new  = CTRL_SBOX;
-            enc_ctrl_we   = 1'b1;
-          end
-
-        CTRL_SBOX:
-          begin
-            sword_ctr_inc = 1'b1;
-            update_type   = SBOX_UPDATE;
-            if (sword_ctr_reg == 2'h3)
-              begin
-                enc_ctrl_new  = CTRL_MAIN;
-                enc_ctrl_we   = 1'b1;
-              end
-          end
-
-        CTRL_MAIN:
-          begin
-            sword_ctr_rst = 1'b1;
-            round_ctr_inc = 1'b1;
-            if (round_ctr_reg < num_rounds)
-              begin
-                update_type   = MAIN_UPDATE;
-                enc_ctrl_new  = CTRL_SBOX;
-                enc_ctrl_we   = 1'b1;
-              end
-            else
-              begin
-                update_type  = FINAL_UPDATE;
-                ready_new    = 1'b1;
-                ready_we     = 1'b1;
-                enc_ctrl_new = CTRL_IDLE;
-                enc_ctrl_we  = 1'b1;
-              end
-          end
-
-        default:
-          begin
-            // Empty. Just here to make the synthesis tool happy.
-          end
-      endcase // case (enc_ctrl_reg)
-    end // encipher_ctrl
+//  //----------------------------------------------------------------
+//  // Registers including update variables and write enable.
+//  //----------------------------------------------------------------
+//  reg [1 : 0]   sword_ctr_reg;
+//  reg [1 : 0]   sword_ctr_new;
+//  reg           sword_ctr_we;
+//  reg           sword_ctr_inc;
+//  reg           sword_ctr_rst;
+//
+//  reg [3 : 0]   round_ctr_reg;
+//  reg [3 : 0]   round_ctr_new;
+//  reg           round_ctr_we;
+//  reg           round_ctr_rst;
+//  reg           round_ctr_inc;
+//
+//  reg [127 : 0] block_new;
+//  reg [31 : 0]  block_w0_reg;
+//  reg [31 : 0]  block_w1_reg;
+//  reg [31 : 0]  block_w2_reg;
+//  reg [31 : 0]  block_w3_reg;
+//  reg           block_w0_we;
+//  reg           block_w1_we;
+//  reg           block_w2_we;
+//  reg           block_w3_we;
+//
+//  reg           ready_reg;
+//  reg           ready_new;
+//  reg           ready_we;
+//
+//  reg [1 : 0]   enc_ctrl_reg;
+//  reg [1 : 0]   enc_ctrl_new;
+//  reg           enc_ctrl_we;
+//
+//
+//  //----------------------------------------------------------------
+//  // Wires.
+//  //----------------------------------------------------------------
+//  reg [2 : 0]  update_type;
+//  reg [31 : 0] muxed_sboxw;
+//
+//
+//  //----------------------------------------------------------------
+//  // Concurrent connectivity for ports etc.
+//  //----------------------------------------------------------------
+//  assign new_block = {block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg};
+//
+//
+//  //----------------------------------------------------------------
+//  // reg_update
+//  //
+//  // Update functionality for all registers in the core.
+//  // All registers are positive edge triggered with asynchronous
+//  // active low reset. All registers have write enable.
+//  //----------------------------------------------------------------
+//  always @ (posedge clk or negedge reset_n)
+//    begin: reg_update
+//      if (!reset_n)
+//        begin
+//          block_w0_reg  <= 32'h0;
+//          block_w1_reg  <= 32'h0;
+//          block_w2_reg  <= 32'h0;
+//          block_w3_reg  <= 32'h0;
+//          sword_ctr_reg <= 2'h0;
+//          round_ctr_reg <= 4'h0;
+//          ready_reg     <= 1'b1;
+//          enc_ctrl_reg  <= CTRL_IDLE;
+//        end
+//      else
+//        begin
+//          if (block_w0_we)
+//            block_w0_reg <= block_new[127 : 096];
+//
+//          if (block_w1_we)
+//            block_w1_reg <= block_new[095 : 064];
+//
+//          if (block_w2_we)
+//            block_w2_reg <= block_new[063 : 032];
+//
+//          if (block_w3_we)
+//            block_w3_reg <= block_new[031 : 000];
+//
+//          if (sword_ctr_we)
+//            sword_ctr_reg <= sword_ctr_new;
+//
+//          if (round_ctr_we)
+//            round_ctr_reg <= round_ctr_new;
+//
+//          if (ready_we)
+//            ready_reg <= ready_new;
+//
+//          if (enc_ctrl_we)
+//            enc_ctrl_reg <= enc_ctrl_new;
+//        end
+//    end // reg_update
+//
+//
+//  //----------------------------------------------------------------
+//  // round_logic
+//  //
+//  // The logic needed to implement init, main and final rounds.
+//  //----------------------------------------------------------------
+//  always @*
+//    begin : round_logic
+//      reg [127 : 0] old_block, shiftrows_block, mixcolumns_block;
+//      reg [127 : 0] addkey_init_block, addkey_main_block, addkey_final_block;
+//
+//      block_new   = 128'h0;
+//      muxed_sboxw = 32'h0;
+//      block_w0_we = 1'b0;
+//      block_w1_we = 1'b0;
+//      block_w2_we = 1'b0;
+//      block_w3_we = 1'b0;
+//
+//      old_block          = {block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg};
+//      shiftrows_block    = shiftrows(old_block);
+//      mixcolumns_block   = mixcolumns(shiftrows_block);
+//      addkey_init_block  = addroundkey(block, round_key);
+//      addkey_main_block  = addroundkey(mixcolumns_block, round_key);
+//      addkey_final_block = addroundkey(shiftrows_block, round_key);
+//
+//      case (update_type)
+//        INIT_UPDATE:
+//          begin
+//            block_new    = addkey_init_block;
+//            block_w0_we  = 1'b1;
+//            block_w1_we  = 1'b1;
+//            block_w2_we  = 1'b1;
+//            block_w3_we  = 1'b1;
+//          end
+//
+//        SBOX_UPDATE:
+//          begin
+//            block_new = {new_sboxw, new_sboxw, new_sboxw, new_sboxw};
+//
+//            case (sword_ctr_reg)
+//              2'h0:
+//                begin
+//                  muxed_sboxw = block_w0_reg;
+//                  block_w0_we = 1'b1;
+//                end
+//
+//              2'h1:
+//                begin
+//                  muxed_sboxw = block_w1_reg;
+//                  block_w1_we = 1'b1;
+//                end
+//
+//              2'h2:
+//                begin
+//                  muxed_sboxw = block_w2_reg;
+//                  block_w2_we = 1'b1;
+//                end
+//
+//              2'h3:
+//                begin
+//                  muxed_sboxw = block_w3_reg;
+//                  block_w3_we = 1'b1;
+//                end
+//            endcase // case (sbox_mux_ctrl_reg)
+//          end
+//
+//        MAIN_UPDATE:
+//          begin
+//            block_new    = addkey_main_block;
+//            block_w0_we  = 1'b1;
+//            block_w1_we  = 1'b1;
+//            block_w2_we  = 1'b1;
+//            block_w3_we  = 1'b1;
+//          end
+//
+//        FINAL_UPDATE:
+//          begin
+//            block_new    = addkey_final_block;
+//            block_w0_we  = 1'b1;
+//            block_w1_we  = 1'b1;
+//            block_w2_we  = 1'b1;
+//            block_w3_we  = 1'b1;
+//          end
+//
+//        default:
+//          begin
+//          end
+//      endcase // case (update_type)
+//    end // round_logic
+//
+//
+//  //----------------------------------------------------------------
+//  // sword_ctr
+//  //
+//  // The subbytes word counter with reset and increase logic.
+//  //----------------------------------------------------------------
+//  always @*
+//    begin : sword_ctr
+//      sword_ctr_new = 2'h0;
+//      sword_ctr_we  = 1'b0;
+//
+//      if (sword_ctr_rst)
+//        begin
+//          sword_ctr_new = 2'h0;
+//          sword_ctr_we  = 1'b1;
+//        end
+//      else if (sword_ctr_inc)
+//        begin
+//          sword_ctr_new = sword_ctr_reg + 1'b1;
+//          sword_ctr_we  = 1'b1;
+//        end
+//    end // sword_ctr
+//
+//
+//  //----------------------------------------------------------------
+//  // round_ctr
+//  //
+//  // The round counter with reset and increase logic.
+//  //----------------------------------------------------------------
+//  always @*
+//    begin : round_ctr
+//      round_ctr_new = 4'h0;
+//      round_ctr_we  = 1'b0;
+//
+//      if (round_ctr_rst)
+//        begin
+//          round_ctr_new = 4'h0;
+//          round_ctr_we  = 1'b1;
+//        end
+//      else if (round_ctr_inc)
+//        begin
+//          round_ctr_new = round_ctr_reg + 1'b1;
+//          round_ctr_we  = 1'b1;
+//        end
+//    end // round_ctr
+//
+//
+//  //----------------------------------------------------------------
+//  // encipher_ctrl
+//  //
+//  // The FSM that controls the encipher operations.
+//  //----------------------------------------------------------------
+//  always @*
+//    begin: encipher_ctrl
+//      reg [3 : 0] num_rounds;
+//
+//      // Default assignments.
+//      sword_ctr_inc = 1'b0;
+//      sword_ctr_rst = 1'b0;
+//      round_ctr_inc = 1'b0;
+//      round_ctr_rst = 1'b0;
+//      ready_new     = 1'b0;
+//      ready_we      = 1'b0;
+//      update_type   = NO_UPDATE;
+//      enc_ctrl_new  = CTRL_IDLE;
+//      enc_ctrl_we   = 1'b0;
+//
+//      if (keylen == AES_256_BIT_KEY)
+//        begin
+//          num_rounds = AES256_ROUNDS;
+//        end
+//      else
+//        begin
+//          num_rounds = AES128_ROUNDS;
+//        end
+//
+//      case(enc_ctrl_reg)
+//        CTRL_IDLE:
+//          begin
+//            if (next)
+//              begin
+//                round_ctr_rst = 1'b1;
+//                ready_new     = 1'b0;
+//                ready_we      = 1'b1;
+//                enc_ctrl_new  = CTRL_INIT;
+//                enc_ctrl_we   = 1'b1;
+//              end
+//          end
+//
+//        CTRL_INIT:
+//          begin
+//            round_ctr_inc = 1'b1;
+//            sword_ctr_rst = 1'b1;
+//            update_type   = INIT_UPDATE;
+//            enc_ctrl_new  = CTRL_SBOX;
+//            enc_ctrl_we   = 1'b1;
+//          end
+//
+//        CTRL_SBOX:
+//          begin
+//            sword_ctr_inc = 1'b1;
+//            update_type   = SBOX_UPDATE;
+//            if (sword_ctr_reg == 2'h3)
+//              begin
+//                enc_ctrl_new  = CTRL_MAIN;
+//                enc_ctrl_we   = 1'b1;
+//              end
+//          end
+//
+//        CTRL_MAIN:
+//          begin
+//            sword_ctr_rst = 1'b1;
+//            round_ctr_inc = 1'b1;
+//            if (round_ctr_reg < num_rounds)
+//              begin
+//                update_type   = MAIN_UPDATE;
+//                enc_ctrl_new  = CTRL_SBOX;
+//                enc_ctrl_we   = 1'b1;
+//              end
+//            else
+//              begin
+//                update_type  = FINAL_UPDATE;
+//                ready_new    = 1'b1;
+//                ready_we     = 1'b1;
+//                enc_ctrl_new = CTRL_IDLE;
+//                enc_ctrl_we  = 1'b1;
+//              end
+//          end
+//
+//        default:
+//          begin
+//            // Empty. Just here to make the synthesis tool happy.
+//          end
+//      endcase // case (enc_ctrl_reg)
+//    end // encipher_ctrl
 
 endmodule // aes_encipher_block
 
