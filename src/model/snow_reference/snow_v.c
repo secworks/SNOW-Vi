@@ -1,9 +1,35 @@
-//
+// =====================================================================
 //  snow_v.c
-//  RefImp
+//  --------
 //
-//  Created by Patrik Ekdahl on 2024-03-04.
+// Copyright 2024 Patrik Ekdahl
 //
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//
+// 1. Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following
+// disclaimer in the documentation and/or other materials provided
+// with the distribution.
+
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+// CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES,
+// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+// USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+// AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+// =====================================================================
 
 #include "snow_v.h"
 #include "aes.h"
@@ -32,7 +58,7 @@ static void print_state(void) {
     print_128("R3",r3);
     print_128("T1",t1);
     print_128("T2",t2);
-    
+
     printf("\n");
 }
 
@@ -75,7 +101,7 @@ static void CalcTaps(void) {
     t1.w[1] = B.w[5];
     t1.w[2] = B.w[6];
     t1.w[3] = B.w[7];
-    
+
     t2.w[0] = A.w[0];
     t2.w[1] = A.w[1];
     t2.w[2] = A.w[2];
@@ -89,10 +115,10 @@ static void LoadLFSR(const u8 *K, const u8 *IV)
     {
         A.b[idx]      = IV[idx];
         A.b[idx + 16] = K[idx];
-        
+
         B.b[idx]      = 0x00;
         B.b[idx + 16] = K[idx + 16];
-        
+
     }
     CalcTaps();
 }
@@ -102,7 +128,7 @@ static void ClockLFSR_Step(void) //the update of the LFSR
 {
     u16 u = MULx(A.s[0], 0x990f) ^A.s[1] ^MULxInv(A.s[8],0xcc87) ^ B.s[0];
     u16 v = MULx(B.s[0], 0xc963) ^B.s[3] ^MULxInv(B.s[8],0xe4b1) ^ A.s[0];
-    
+
     for(int idx = 0; idx < 15; idx++) {
         A.s[idx] = A.s[idx + 1];
         B.s[idx] = B.s[idx + 1];
@@ -129,33 +155,33 @@ static void ClockFSM(void)
 {
     u128 next_r1;
     u128 aes_out;
-    
+
     for (int idx = 0; idx < 4; idx++) {
         next_r1.w[idx] = ((t2.w[idx] ^ r3.w[idx]) + r2.w[idx]);
     }
-    
+
     AESRound(r2.b, aes_out.b); //The second AES round
     for (int idx = 0; idx < 16; idx++) {
         r3.b[idx] = aes_out.b[idx];
     }
-    
+
     AESRound(r1.b,aes_out.b);  //The first AES round
     for (int idx = 0; idx < 16; idx++) {
         r2.b[idx] = aes_out.b[idx];
     }
-    
+
     for (int idx = 0; idx < 16; idx++) {
         r1.b[idx] = next_r1.b[sigma[idx]];
     }
-    
+
 }
 
 
 void SNOW_V_Init(const u8 * key, const u8 * iv) {
     int i;
-    
+
     clearR123();
-    
+
     LoadLFSR(key, iv);
     if (INTERNAL_DEBUG) {
         CalcOutput();

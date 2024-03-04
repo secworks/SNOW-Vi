@@ -1,9 +1,35 @@
-//
+// =====================================================================
 //  aes.c
-//  RefImp
+//  -----
 //
-//  Created by Patrik Ekdahl on 2024-03-04.
+// Copyright 2024 Patrik Ekdahl
 //
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//
+// 1. Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above
+// copyright notice, this list of conditions and the following
+// disclaimer in the documentation and/or other materials provided
+// with the distribution.
+
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+// CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES,
+// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+// USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+// AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+// =====================================================================
 
 #include "aes.h"
 
@@ -33,10 +59,10 @@ u8 SBox[256] = {
     0x8C,0xA1,0x89,0x0D,0xBF,0xE6,0x42,0x68,0x41,0x99,0x2D,0x0F,0xB0,0x54,0xBB,0x16};
 
 void sub_bytes(u8 *state) {
-    
+
     u8 i, j;
     u8 row, col;
-    
+
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             row = (state[4 * i + j] & 0xf0) >> 4;
@@ -47,25 +73,25 @@ void sub_bytes(u8 *state) {
 }
 
 u8 gmult(u8 a, u8 b) {
-    
+
     u8 p = 0, i = 0, hbs = 0;
-    
+
     for (i = 0; i < 8; i++) {
         if (b & 1) {
             p ^= a;
         }
-        
+
         hbs = a & 0x80;
         a <<= 1;
         if (hbs) a ^= 0x1b; // 0000 0001 0001 1011
         b >>= 1;
     }
-    
+
     return (u8)p;
 }
 
 void coef_mult(u8 *a, u8 *b, u8 *d) {
-    
+
     d[0] = gmult(a[0], b[0]) ^ gmult(a[3], b[1]) ^ gmult(a[2], b[2]) ^ gmult(a[1], b[3]);
     d[1] = gmult(a[1], b[0]) ^ gmult(a[0], b[1]) ^ gmult(a[3], b[2]) ^ gmult(a[2], b[3]);
     d[2] = gmult(a[2], b[0]) ^ gmult(a[1], b[1]) ^ gmult(a[0], b[2]) ^ gmult(a[3], b[3]);
@@ -74,17 +100,17 @@ void coef_mult(u8 *a, u8 *b, u8 *d) {
 
 void mix_columns(u8 *state)
 {
-    
+
     u8 a[] = { 0x02, 0x01, 0x01, 0x03 }; // a(x) = {02} + {01}x + {01}x2 + {03}x3
     u8 i, j, col[4], res[4];
-    
+
     for (j = 0; j < 4; j++) {
         for (i = 0; i < 4; i++) {
             col[i] = state[4*i + j];
         }
-        
+
         coef_mult(a, col, res);
-        
+
         for (i = 0; i < 4; i++) {
             state[4*i + j] = res[i];
         }
@@ -92,18 +118,18 @@ void mix_columns(u8 *state)
 }
 
 void shift_rows(u8 *state) {
-    
+
     u8 i, k, s, tmp;
-    
+
     for (i = 1; i < 4; i++) {
         s = 0;
         while (s < i) {
             tmp = state[4*i + 0];
-            
+
             for (k = 1; k < 4; k++) {
                 state[4*i + k - 1] = state[4*i + k];
             }
-            
+
             state[4*i + 4 - 1] = tmp;
             s++;
         }
@@ -111,10 +137,10 @@ void shift_rows(u8 *state) {
 }
 
 void AESRound(u8 *in, u8 *out) {
-    
+
     u8 state[4 * 4];
     u8  i, j;
-    
+
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             state[4*i + j] = in[i + 4 * j];
