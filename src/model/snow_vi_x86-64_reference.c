@@ -73,13 +73,13 @@ struct SnowVi
 int main (){
   SnowVi s;
   unsigned char key [32] = { 0 }, iv [16] = { 0 };
-  s. keyiv_setup ( key , iv );
-  for ( int t = 0; t < 4; t ++)
-    { unsigned char ks [16];
-      STORE (ks , s. keystream () );
-      for ( int i = 0; i < 16; i ++)
-	printf (" %02 x " , ( unsigned int ) ks [i ]) ;
-      printf ("\n");
-    }
+  s.keyiv_setup ( key , iv );
+  for (int t = 0; t < 4; t ++) {
+    unsigned char ks [16];
+    STORE (ks , s. keystream () );
+    for (int i = 0; i < 16; i ++)
+      printf (" %02 x " , ( unsigned int ) ks [i ]) ;
+    printf ("\n");
+  }
   return 0;
 }
