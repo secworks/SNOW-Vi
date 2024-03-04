@@ -205,13 +205,12 @@ void SNOW_V_Init(const u8 * key, const u8 * iv) {
     }
 }
 
-u128 SNOW_V_Keystream(void) {
-    u128 result;
 
+u128 SNOW_V_Keystream(void) {
     CalcOutput();
-    result = z;
     ClockFSM();
     ClockLFSRMode(WORK_MODE);
+
     if (INTERNAL_DEBUG) {
         print_state();
     }
