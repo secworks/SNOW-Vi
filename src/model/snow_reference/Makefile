@@ -11,7 +11,7 @@ C_FILES = aes.c debug.c main.c snow_v.c snow_vi.c
 H_FILES = aes.h debug.h snow_v.h snow_vi.h typeconst.h
 
 CC = clang
-CC_FLAGS = -O2 -Wall
+CC_FLAGS = -std=c11 -O2 -Wall -Wpedantic
 
 all: snow_reference
 
