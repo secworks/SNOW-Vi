@@ -1,7 +1,7 @@
 # snow_vi
 
 ## Status
-Just Started. Does not work. **DO. Not. Use.**
+Just Started. Does not work. **Do. NOT. Use.**
 
 ## Introduction
 This is a hardware implementation of the [SNOW-Vi stream
