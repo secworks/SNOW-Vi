@@ -46,7 +46,7 @@ module snow_vi_core(
                      input wire [255 : 0]  key,
 
                      output wire           ready,
-                     output wire [127 : 0] keystream
+                     output wire [127 : 0] z
                     );
 
 
@@ -99,7 +99,7 @@ module snow_vi_core(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire [127 : 0] tmp_keystream;
+  wire [127 : 0] tmp_z;
 
   wire [127 : 0] t1;
   wire [127 : 0] t2;
@@ -108,11 +108,11 @@ module snow_vi_core(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign keystream = tmp_keystream;
-  assign ready     = ready_reg;
+  assign z     = tmp_z;
+  assign ready = ready_reg;
 
-  assign t1 = {lfsr_b_reg[7], lfsr_b_reg[6], lfsr_b_reg[5], lfsr_b_reg[4],
-	       lfsr_b_reg[3], lfsr_b_reg[2], lfsr_b_reg[1], lfsr_b_reg[0]};
+  assign t1 = {lfsr_b_reg[8],  lfsr_b_reg[9],  lfsr_b_reg[10], lfsr_b_reg[11],
+	       lfsr_b_reg[12], lfsr_b_reg[13], lfsr_b_reg[14], lfsr_b_reg[15]};
 
   assign t2 = {lfsr_a_reg[7], lfsr_a_reg[6], lfsr_a_reg[5], lfsr_a_reg[4],
 	       lfsr_a_reg[3], lfsr_a_reg[2], lfsr_a_reg[1], lfsr_a_reg[0]};
@@ -167,7 +167,6 @@ module snow_vi_core(
   //----------------------------------------------------------------
   always @*
     begin : snow_vi_core_logic
-      integer i;
     end // snow_vi_core_logic
 
 
