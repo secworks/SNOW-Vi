@@ -1,7 +1,7 @@
 //======================================================================
 //
-// aes_sbox.v
-// ----------
+// aes_vi_aes_sbox.v
+// -----------------
 // The AES S-box. Basically a 256 Byte ROM. This implementation
 // contains four parallel S-boxes to handle a 32 bit word.
 //
@@ -39,10 +39,10 @@
 
 `default_nettype none
 
-module aes_sbox(
-                input wire [31 : 0]  sboxw,
-                output wire [31 : 0] new_sboxw
-               );
+module snow_vi_aes_sbox(
+			input wire [31 : 0]  sboxw,
+			output wire [31 : 0] new_sboxw
+		       );
 
 
   //----------------------------------------------------------------
