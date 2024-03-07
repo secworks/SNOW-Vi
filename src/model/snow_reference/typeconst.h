@@ -41,6 +41,19 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
+
+struct snow_vi_ctx {
+  uint16_t lfsr_a[16];
+  uint16_t lfsr_b[16];
+
+  uint32_t t1[4];
+  uint32_t t2[4];
+
+  uint32_t r1[4];
+  uint32_t r2[4];
+  uint32_t r3[4];
+}
+
 typedef union FSMR
 {
     u32 w[4];
