@@ -55,7 +55,8 @@ struct snow_vi_ctx {
   uint32_t r1[4];
   uint32_t r2[4];
   uint32_t r3[4];
-}
+} ctx;
+
 
 typedef union FSMR
 {
