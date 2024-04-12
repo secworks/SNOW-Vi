@@ -84,8 +84,9 @@ void SNOW_V_Testvectors(void) {
             u128 z = SNOW_V_Keystream();
             print_128(0, z);
         }
+    printf("\n");
     }
-
+    printf("\n");
 }
 
 
@@ -106,8 +107,9 @@ void SNOW_Vi_Testvectors(void) {
             u128 z = SNOW_Vi_Keystream();
             print_128(0, z);
         }
+	printf("\n");
     }
-
+    printf("\n");
 }
 
 
