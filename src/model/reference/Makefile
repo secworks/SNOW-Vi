@@ -36,16 +36,16 @@
 #
 #=======================================================================
 
-C_FILES = snow_v.c snow_vi_test.c snow_v.c snow_vi.c
+C_FILES = snow_vi_test.c snow_vi.c snow_vi.c
 H_FILES = snow_vi.h
 
 CC = clang
 CC_FLAGS = -std=c11 -O2 -Wall -Wpedantic
 
-all: snow_v1_test
+all: snow_vi_test
 
 snow_vi_test: $(C_FILES) $(H_FILES)
-	$(CC) $(CC_FLAGS) -o snow_reference $(C_FILES)
+	$(CC) $(CC_FLAGS) -o snow_vi_test $(C_FILES)
 
 flaws: $(C_FILES)
 	flawfinder .
