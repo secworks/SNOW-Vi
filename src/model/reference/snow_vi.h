@@ -45,16 +45,13 @@ struct snow_vi_ctx {
 };
 
 // Given a key  an iv, return  an initialized snow_vi context.
-struct snow_vi_ctx* snow_vi_init(uint8_t *key, uint8_t *iv);
+void snow_vi_init(struct snow_vi_ctx*, const uint8_t *key, const uint8_t *iv);
 
 // Update the state one step.
 void snow_vi_update(struct snow_vi_ctx *ctx);
 
-// Print the generated keystream for the current given state.
-void snow_vi_print_keystream(struct snow_vi_ctx *ctx);
-
 // Print the current given state.
-void snow_vi_print_state(struct snow_vi_ctx *ctx);
+void snow_vi_display_state(struct snow_vi_ctx *ctx);
 
 
 //=======================================================================

@@ -36,7 +36,7 @@
 #
 #=======================================================================
 
-C_FILES = snow_vi_test.c snow_vi.c snow_vi.c
+C_FILES = snow_vi_test.c snow_vi.c
 H_FILES = snow_vi.h
 
 CC = clang
