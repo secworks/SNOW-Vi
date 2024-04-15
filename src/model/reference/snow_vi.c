@@ -36,12 +36,26 @@
 //=======================================================================
 
 #include "snow_vi.h"
+#include <stdio.h>
 
 static const uint8_t sigma[16] = {0, 4, 8, 12, 1, 5, 9, 13,
 				  2, 6, 10, 14, 3, 7, 11, 15};
 
+uint8_t u8_u16(uint8_t lsb, uint8_t msb) {
+  uint16_t u16_msb = (uint16_t)(msb << 8);
+  uint16_t u16_lsb = (uint16_t)lsb;
+  printf("u8_u16: msb: 0x%04x, lsb: 0x%04x, 0x%04x\n", u16_msb, u16_lsb,
+	 u16_msb + u16_lsb);
+  return msb + lsb;
+}
+
 // Initalize the given context based on the given key  and iv.
 void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv) {
+  // Load lfsr_a with key bytes, little endian order.
+  int i;
+  for (i = 0 ; i < 8 ; i++) {
+    ctx->lfsr_a[i] = u8_u16(key[(2 * i)], key[(2 * i) + 1]);
+  }
 }
 
 // Update to the next state.
@@ -50,7 +64,13 @@ void snow_vi_next(struct snow_vi_ctx *ctx) {
 
 // Display the current state.
 void snow_vi_display_state(struct snow_vi_ctx *ctx) {
+  int i;
+  printf("lfsr_a:\n");
+  for (i = 0 ; i < 8 ; i++) {
+    printf("0x%04x ", ctx->lfsr_a[i]);
+  }
 
+  printf("\n");
 }
 
 //=======================================================================
