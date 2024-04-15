@@ -37,15 +37,18 @@
 
 #include "snow_vi.h"
 
-// Given a key  an iv, return  an initialized snow_vi context.
+static const uint8_t sigma[16] = {0, 4, 8, 12, 1, 5, 9, 13,
+				  2, 6, 10, 14, 3, 7, 11, 15};
+
+// Initalize the given context based on the given key  and iv.
 void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv) {
 }
 
-// Update the state one step.
-void snow_vi_update(struct snow_vi_ctx *ctx) {
+// Update to the next state.
+void snow_vi_next(struct snow_vi_ctx *ctx) {
 }
 
-// Print the current given state.
+// Display the current state.
 void snow_vi_display_state(struct snow_vi_ctx *ctx) {
 
 }

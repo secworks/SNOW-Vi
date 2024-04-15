@@ -54,6 +54,15 @@ int main(void) {
 
   struct snow_vi_ctx my_ctx;
   snow_vi_init(&my_ctx, &key[0], &iv[0]);
+
+  printf("State after init.\n");
+  snow_vi_display_state(&my_ctx);
+
+  for (int i = 0; i < 16 ; i++) {
+    snow_vi_next(&my_ctx);
+  }
+
+  printf("State after 16 updates.\n");
   snow_vi_display_state(&my_ctx);
 
   printf("snow_vi test completed.\n");
