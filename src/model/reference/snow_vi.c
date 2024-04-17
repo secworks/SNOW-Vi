@@ -43,7 +43,7 @@ static const uint8_t sigma[16] = {0, 4, 8, 12, 1, 5, 9, 13,
 
 // Convert bytes to 16-bit unsigned words, little-endian first.
 uint16_t u8_u16(uint8_t lsb, uint8_t msb) {
-  return (uint16_t)(msb << 8) | (uint16_t)lsb;
+  return (uint16_t) (msb << 8) | lsb;
 }
 
 // Initalize the given context based on the given key  and iv.
@@ -52,7 +52,11 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
   int i;
 
   for (i = 0 ; i < 8 ; i++) {
-    ctx->lfsr_a[i] = u8_u16(key[(2 * i)], key[(2 * i) + 1]);
+    ctx->lfsr_a[i] = u8_u16(iv[(2 * i)], iv[(2 * i) + 1]);
+    ctx->lfsr_a[i + 8] = u8_u16(key[(2 * i)], key[(2 * i) + 1]);
+
+    ctx->lfsr_b[i] = 0x00;
+    ctx->lfsr_b[i + 8] = u8_u16(key[(2 * i) + 16], key[(2 * i) + 17]);
   }
 }
 
@@ -63,11 +67,19 @@ void snow_vi_next(struct snow_vi_ctx *ctx) {
 // Display the current state.
 void snow_vi_display_state(struct snow_vi_ctx *ctx) {
   int i;
+
+  printf("\n");
   printf("lfsr_a:\n");
-  for (i = 0 ; i < 8 ; i++) {
+  for (i = 0 ; i < 16 ; i++) {
     printf("0x%04x ", ctx->lfsr_a[i]);
   }
+  printf("\n");
 
+  printf("\n");
+  printf("lfsr_b:\n");
+  for (i = 0 ; i < 16 ; i++) {
+    printf("0x%04x ", ctx->lfsr_b[i]);
+  }
   printf("\n");
 }
 

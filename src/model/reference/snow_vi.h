@@ -40,8 +40,8 @@
 #include <stdint.h>
 
 struct snow_vi_ctx {
-  uint16_t lfsr_a[8];
-  uint16_t lfsr_b[8];
+  uint16_t lfsr_a[16];
+  uint16_t lfsr_b[16];
 };
 
 // Initalize the given context based on the given key  and iv.
