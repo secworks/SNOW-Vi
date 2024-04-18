@@ -42,7 +42,7 @@ static const uint8_t sigma[16] = {0, 4, 8, 12, 1, 5, 9, 13,
 				  2, 6, 10, 14, 3, 7, 11, 15};
 
 
-uint16_t gmul(uint16_t a, uint16_t a) {
+uint16_t gmul(uint16_t a, uint16_t b) {
   if (a & 0x8000) {
     return (a << 1) ^ b;
   }
@@ -62,10 +62,10 @@ void update_lfsr(struct snow_vi_ctx *ctx) {
   uint16_t u;
   uint16_t v;
 
-  u = gmul(ctz->lfsr_a[0], 0x4a6d) ^ ctx->lfsr_a[7] ^ ctx->lfsr_b[0];
-  v = gmul(ctz->lfsr_b[0], 0xcc87) ^ ctx->lfsr_b[8] ^ ctx->lfsr_a[0];
+  u = gmul(ctx->lfsr_a[0], 0x4a6d) ^ ctx->lfsr_a[7] ^ ctx->lfsr_b[0];
+  v = gmul(ctx->lfsr_b[0], 0xcc87) ^ ctx->lfsr_b[8] ^ ctx->lfsr_a[0];
 
-  (int i = 0 ; i < 15 ; i++) {
+  for (int i = 0 ; i < 15 ; i++) {
     ctx->lfsr_a[i] = ctx->lfsr_a[i + 1];
     ctx->lfsr_b[i] = ctx->lfsr_b[i + 1];
   }
@@ -78,11 +78,9 @@ void update_lfsr(struct snow_vi_ctx *ctx) {
 // Initalize the given context based on the given key  and iv.
 void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv) {
   // Load lfsr_a with key bytes, little endian order.
-  int i;
-
   ctx->initialized = 0;
 
-  for (i = 0 ; i < 8 ; i++) {
+  for (int i = 0 ; i < 8 ; i++) {
     ctx->lfsr_a[i] = u8_u16(iv[(2 * i)], iv[(2 * i) + 1]);
     ctx->lfsr_a[i + 8] = u8_u16(key[(2 * i)], key[(2 * i) + 1]);
 
@@ -90,7 +88,7 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
     ctx->lfsr_b[i + 8] = u8_u16(key[(2 * i) + 16], key[(2 * i) + 17]);
   }
 
-  for (i = 0 ; i < 4 ; i++) {
+  for (int i = 0 ; i < 4 ; i++) {
     ctx->r1[i] = 0;
     ctx->r2[i] = 0;
     ctx->r3[i] = 0;
@@ -101,31 +99,47 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
   ctx->initialized = 1;
 }
 
+
+void gen_z(struct snow_vi_ctx *ctx) {
+  for (int i = 0 ; i < 8 ; i++) {
+    ctx->z[i] = (ctx->t1[i] + ctx->r1[i]) ^ ctx->r2[i];
+  }
+}
+
+
 // Update to the next state.
 void snow_vi_next(struct snow_vi_ctx *ctx) {
 
-  if (ctx->initialized == 0) {
-    printf("Performing initial state update.\n");
+  // Update the LFSRs
+  for (int i = 0 ; i < 8 ; i++) {
+    update_lfsr(ctx);
   }
 
+  if (ctx->initialized == 0) {
+    printf("Performing initial state update.\n");
+
+    for (int i = 0 ; i < 8 ; i++) {
+      ctx->lfsr_a[i] = ctx->lfsr_a[i] ^ ctx->z[i];
+      update_lfsr(ctx);
+    }
+  }
 }
 
 
 // Display the current state.
 void snow_vi_display_state(struct snow_vi_ctx *ctx) {
-  int i;
-
   printf("Current state:\n");
   printf("--------------\n");
   printf("initalized: %1d\n", ctx->initialized);
   printf("lfsr_a: ");
-  for (i = 0 ; i < 16 ; i++) {
+
+  for (int i = 0 ; i < 16 ; i++) {
     printf("0x%04x ", ctx->lfsr_a[i]);
   }
   printf("\n");
 
   printf("lfsr_b: ");
-  for (i = 0 ; i < 16 ; i++) {
+  for (int i = 0 ; i < 16 ; i++) {
     printf("0x%04x ", ctx->lfsr_b[i]);
   }
   printf("\n");
