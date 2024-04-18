@@ -42,6 +42,16 @@
 struct snow_vi_ctx {
   uint16_t lfsr_a[16];
   uint16_t lfsr_b[16];
+
+  uint32_t r1[4];
+  uint32_t r2[4];
+  uint32_t r3[4];
+
+  uint32_t t1[4];
+  uint32_t t2[4];
+
+  uint32_t z[4];
+
   uint8_t initialized;
 };
 

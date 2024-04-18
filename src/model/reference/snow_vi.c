@@ -41,10 +41,39 @@
 static const uint8_t sigma[16] = {0, 4, 8, 12, 1, 5, 9, 13,
 				  2, 6, 10, 14, 3, 7, 11, 15};
 
+
+uint16_t gmul(uint16_t a, uint16_t a) {
+  if (a & 0x8000) {
+    return (a << 1) ^ b;
+  }
+  else {
+    return (a  << 1);
+  }
+}
+
+
 // Convert bytes to 16-bit unsigned words, little-endian first.
 uint16_t u8_u16(uint8_t lsb, uint8_t msb) {
   return (uint16_t) (msb << 8) | lsb;
 }
+
+
+void update_lfsr(struct snow_vi_ctx *ctx) {
+  uint16_t u;
+  uint16_t v;
+
+  u = gmul(ctz->lfsr_a[0], 0x4a6d) ^ ctx->lfsr_a[7] ^ ctx->lfsr_b[0];
+  v = gmul(ctz->lfsr_b[0], 0xcc87) ^ ctx->lfsr_b[8] ^ ctx->lfsr_a[0];
+
+  (int i = 0 ; i < 15 ; i++) {
+    ctx->lfsr_a[i] = ctx->lfsr_a[i + 1];
+    ctx->lfsr_b[i] = ctx->lfsr_b[i + 1];
+  }
+
+  ctx->lfsr_a[15] = u;
+  ctx->lfsr_b[15] = v;
+}
+
 
 // Initalize the given context based on the given key  and iv.
 void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv) {
@@ -59,6 +88,12 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
 
     ctx->lfsr_b[i] = 0x00;
     ctx->lfsr_b[i + 8] = u8_u16(key[(2 * i) + 16], key[(2 * i) + 17]);
+  }
+
+  for (i = 0 ; i < 4 ; i++) {
+    ctx->r1[i] = 0;
+    ctx->r2[i] = 0;
+    ctx->r3[i] = 0;
   }
 
   snow_vi_next(ctx);
@@ -81,20 +116,28 @@ void snow_vi_display_state(struct snow_vi_ctx *ctx) {
   int i;
 
   printf("Current state:\n");
+  printf("--------------\n");
   printf("initalized: %1d\n", ctx->initialized);
-
-  printf("\n");
-  printf("lfsr_a:\n");
+  printf("lfsr_a: ");
   for (i = 0 ; i < 16 ; i++) {
     printf("0x%04x ", ctx->lfsr_a[i]);
   }
   printf("\n");
 
-  printf("\n");
-  printf("lfsr_b:\n");
+  printf("lfsr_b: ");
   for (i = 0 ; i < 16 ; i++) {
     printf("0x%04x ", ctx->lfsr_b[i]);
   }
+  printf("\n");
+
+  printf("r1:     0x%08x 0x%08x 0x%08x 0x%08x\n",
+	 ctx->r1[0], ctx->r1[1], ctx->r1[2], ctx->r1[3]);
+  printf("r2:     0x%08x 0x%08x 0x%08x 0x%08x\n",
+	 ctx->r2[0], ctx->r2[1], ctx->r2[2], ctx->r2[3]);
+  printf("r3:     0x%08x 0x%08x 0x%08x 0x%08x\n",
+	 ctx->r3[0], ctx->r3[1], ctx->r3[2], ctx->r3[3]);
+  printf("\n");
+
   printf("\n");
 }
 
