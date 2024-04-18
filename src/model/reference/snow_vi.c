@@ -51,6 +51,8 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
   // Load lfsr_a with key bytes, little endian order.
   int i;
 
+  ctx->initialized = 0;
+
   for (i = 0 ; i < 8 ; i++) {
     ctx->lfsr_a[i] = u8_u16(iv[(2 * i)], iv[(2 * i) + 1]);
     ctx->lfsr_a[i + 8] = u8_u16(key[(2 * i)], key[(2 * i) + 1]);
@@ -58,15 +60,28 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
     ctx->lfsr_b[i] = 0x00;
     ctx->lfsr_b[i + 8] = u8_u16(key[(2 * i) + 16], key[(2 * i) + 17]);
   }
+
+  snow_vi_next(ctx);
+
+  ctx->initialized = 1;
 }
 
 // Update to the next state.
 void snow_vi_next(struct snow_vi_ctx *ctx) {
+
+  if (ctx->initialized == 0) {
+    printf("Performing initial state update.\n");
+  }
+
 }
+
 
 // Display the current state.
 void snow_vi_display_state(struct snow_vi_ctx *ctx) {
   int i;
+
+  printf("Current state:\n");
+  printf("initalized: %1d\n", ctx->initialized);
 
   printf("\n");
   printf("lfsr_a:\n");
