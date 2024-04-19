@@ -36,11 +36,7 @@
 
 #include <stdint.h>
 
-struct aes_block {
-  uint16_t block[8];
-};
-
-struct aes_block aes_round(struct aes_block block);
+void aes_round(uint8_t *block_in, uint8_t *block_out);
 
 
 //=======================================================================

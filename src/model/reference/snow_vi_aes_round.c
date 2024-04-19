@@ -35,10 +35,11 @@
 //=======================================================================
 
 #include <stdint.h>
-#include "snow_vi_aes_round.h"
 
-struct aes_block aes_round(struct aes_block block) {
-  return block;
+void aes_round(uint8_t *block_in, uint8_t *block_out) {
+  for (int i = 0 ; i < 16 ; i++) {
+    block_out[i] = block_in[i];
+  }
 }
 
 
