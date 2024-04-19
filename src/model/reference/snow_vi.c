@@ -35,8 +35,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //=======================================================================
 
-#include "snow_vi.h"
 #include <stdio.h>
+#include "snow_vi.h"
 
 static const uint8_t sigma[16] = {0, 4, 8, 12, 1, 5, 9, 13,
 				  2, 6, 10, 14, 3, 7, 11, 15};
@@ -57,6 +57,12 @@ uint16_t u8_u16(uint8_t lsb, uint8_t msb) {
   return (uint16_t) (msb << 8) | lsb;
 }
 
+void update_t1_t2(struct snow_vi_ctx *ctx) {
+  for (int i = 0 ; i < 8 ; i++) {
+    ctx->t1[i] = ctx->lfsr_b[i + 8];
+    ctx->t2[i] = ctx->lfsr_a[i + 8];
+  }
+}
 
 void update_lfsr(struct snow_vi_ctx *ctx) {
   uint16_t u;
@@ -88,7 +94,7 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
     ctx->lfsr_b[i + 8] = u8_u16(key[(2 * i) + 16], key[(2 * i) + 17]);
   }
 
-  for (int i = 0 ; i < 4 ; i++) {
+  for (int i = 0 ; i < 8 ; i++) {
     ctx->r1[i] = 0;
     ctx->r2[i] = 0;
     ctx->r3[i] = 0;
