@@ -37,7 +37,7 @@
 #=======================================================================
 
 
-C_FILES = aes.c debug.c snow_v.c snow_vi.c main.c
+C_FILES = aes.c debug.c snow_vi.c main.c
 H_FILES = aes.h debug.h snow_vi.h typeconst.h
 
 CC = clang
