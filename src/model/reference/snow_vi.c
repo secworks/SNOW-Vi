@@ -37,7 +37,6 @@
 
 #include <stdio.h>
 #include "snow_vi.h"
-#include "snow_vi_aes_round.h"
 
 static const uint8_t sigma[16] = {0, 4, 8, 12, 1, 5, 9, 13,
 				  2, 6, 10, 14, 3, 7, 11, 15};
