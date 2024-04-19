@@ -36,8 +36,8 @@
 #
 #=======================================================================
 
-C_FILES = snow_vi_test.c snow_vi.c
-H_FILES = snow_vi.h
+C_FILES = snow_vi_test.c snow_vi.c snow_vi_aes_round.c
+H_FILES = snow_vi.h snow_vi_aes_round.h
 
 CC = clang
 CC_FLAGS = -std=c11 -O2 -Wall -Wpedantic
