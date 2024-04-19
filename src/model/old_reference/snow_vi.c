@@ -174,31 +174,30 @@ static void ClockFSM(void)
 
 
 void SNOW_Vi_Init(const u8 * key, const u8 * iv) {
-    int i;
 
     clearR123();
-
     LoadLFSR(key, iv);
-    if (INTERNAL_DEBUG) {
-        CalcOutput();
-        printf("---- State after key/iv loading: ----\n");
-        print_state();
-    }
-    for (i = 0 ; i<16 ; i++)
-    {
-        CalcOutput();
-        ClockFSM();
-        ClockLFSRMode(INIT_MODE);
-        if (i>=14) {
-            for (int idx = 0; idx < 16; idx++) {
-                r1.b[idx] = r1.b[idx] ^ key[idx + ((i-14)<<4)];
-            }
-        }
-        if (INTERNAL_DEBUG){
-            printf("---- State after initialization round %d (of 16) : ----\n", i+1);
-            print_state();
-        }
-    }
+    CalcOutput();
+
+    printf("---- State after loading : ----\n");
+    print_state();
+
+//    for (i = 0 ; i<16 ; i++)
+//    {
+//        CalcOutput();
+//        ClockFSM();
+//        ClockLFSRMode(INIT_MODE);
+//        if (i>=14) {
+//            for (int idx = 0; idx < 16; idx++) {
+//                r1.b[idx] = r1.b[idx] ^ key[idx + ((i-14)<<4)];
+//            }
+//        }
+//        if (INTERNAL_DEBUG){
+//            printf("---- State after initialization round %d (of 16) : ----\n", i+1);
+//            print_state();
+//        }
+//    }
+
 }
 
 
