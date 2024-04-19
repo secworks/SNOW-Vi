@@ -57,12 +57,14 @@ uint16_t u8_u16(uint8_t lsb, uint8_t msb) {
   return (uint16_t) (msb << 8) | lsb;
 }
 
+
 void update_t1_t2(struct snow_vi_ctx *ctx) {
   for (int i = 0 ; i < 8 ; i++) {
     ctx->t1[i] = ctx->lfsr_b[i + 8];
     ctx->t2[i] = ctx->lfsr_a[i + 8];
   }
 }
+
 
 void update_lfsr(struct snow_vi_ctx *ctx) {
   uint16_t u;
@@ -81,11 +83,17 @@ void update_lfsr(struct snow_vi_ctx *ctx) {
 }
 
 
-// Initalize the given context based on the given key  and iv.
+void gen_z(struct snow_vi_ctx *ctx) {
+  for (int i = 0 ; i < 8 ; i++) {
+    ctx->z[i] = (ctx->t1[i] + ctx->r1[i]) ^ ctx->r2[i];
+  }
+}
+
+
 void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv) {
-  // Load lfsr_a with key bytes, little endian order.
   ctx->initialized = 0;
 
+  // Load lfsr_a and lfsr_b with key and iv bytes, little endian order.
   for (int i = 0 ; i < 8 ; i++) {
     ctx->lfsr_a[i] = u8_u16(iv[(2 * i)], iv[(2 * i) + 1]);
     ctx->lfsr_a[i + 8] = u8_u16(key[(2 * i)], key[(2 * i) + 1]);
@@ -94,36 +102,30 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
     ctx->lfsr_b[i + 8] = u8_u16(key[(2 * i) + 16], key[(2 * i) + 17]);
   }
 
+  update_t1_t2(ctx);
+
+
   for (int i = 0 ; i < 8 ; i++) {
     ctx->r1[i] = 0;
     ctx->r2[i] = 0;
     ctx->r3[i] = 0;
   }
 
-  snow_vi_next(ctx);
+  gen_z(ctx);
+
+  //  snow_vi_next(ctx);
 
   ctx->initialized = 1;
 }
 
 
-void gen_z(struct snow_vi_ctx *ctx) {
-  for (int i = 0 ; i < 8 ; i++) {
-    ctx->z[i] = (ctx->t1[i] + ctx->r1[i]) ^ ctx->r2[i];
-  }
-}
-
-
 // Update to the next state.
 void snow_vi_next(struct snow_vi_ctx *ctx) {
-
-  // Update the LFSRs
   for (int i = 0 ; i < 8 ; i++) {
     update_lfsr(ctx);
   }
 
   if (ctx->initialized == 0) {
-    printf("Performing initial state update.\n");
-
     for (int i = 0 ; i < 8 ; i++) {
       ctx->lfsr_a[i] = ctx->lfsr_a[i] ^ ctx->z[i];
       update_lfsr(ctx);
@@ -158,6 +160,14 @@ void snow_vi_display_state(struct snow_vi_ctx *ctx) {
 	 ctx->r3[0], ctx->r3[1], ctx->r3[2], ctx->r3[3]);
   printf("\n");
 
+  printf("t1:     0x%08x 0x%08x 0x%08x 0x%08x\n",
+	 ctx->t1[0], ctx->t1[1], ctx->t1[2], ctx->t1[3]);
+  printf("t2:     0x%08x 0x%08x 0x%08x 0x%08x\n",
+	 ctx->t2[0], ctx->t2[1], ctx->t2[2], ctx->t2[3]);
+  printf("\n");
+
+  printf("z:      0x%08x 0x%08x 0x%08x 0x%08x\n",
+	 ctx->z[0], ctx->z[1], ctx->z[2], ctx->z[3]);
   printf("\n");
 }
 
