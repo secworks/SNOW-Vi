@@ -54,6 +54,18 @@ int main(void) {
   struct snow_vi_ctx my_ctx;
   snow_vi_init(&my_ctx, &key[0], &iv[0]);
 
+  printf("key: ");
+  for (int i = 0 ; i < 32 ; i++) {
+    printf("%02x ", key[i]);
+  }
+  printf("\n");
+
+  printf("iv:  ");
+  for (int i = 0 ; i < 16 ; i++) {
+    printf("%02x ", iv[i]);
+  }
+  printf("\n\n");
+
   printf("State after init.\n");
   snow_vi_display_state(&my_ctx);
 
