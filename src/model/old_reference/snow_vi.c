@@ -52,16 +52,21 @@ static const int WORK_MODE = 0;
 
 static void print_state(void) {
 
-    print_lfsr("A ",A);
-    print_lfsr("B ",B);
-    print_128("Z ",z);
-    print_128("R1",r1);
-    print_128("R2",r2);
-    print_128("R3",r3);
-    print_128("T1",t1);
-    print_128("T2",t2);
+  print_lfsr("lfsr_a",A);
+  print_lfsr("lsfr_b",B);
+  printf("\n");
 
-    printf("\n");
+  print_128("r1",r1);
+  print_128("r2",r2);
+  print_128("r3",r3);
+  printf("\n");
+
+  print_128("t1",t1);
+  print_128("t2",t2);
+  printf("\n");
+
+  print_128("z ",z);
+  printf("\n");
 }
 
 
@@ -179,7 +184,7 @@ void SNOW_Vi_Init(const u8 * key, const u8 * iv) {
     LoadLFSR(key, iv);
     CalcOutput();
 
-    printf("---- State after loading : ----\n");
+    printf("State after loading:\n");
     print_state();
 
 //    for (i = 0 ; i<16 ; i++)

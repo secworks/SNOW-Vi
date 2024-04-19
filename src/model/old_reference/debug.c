@@ -36,10 +36,10 @@
 void print_128(char *name, u128 r) {
 
     if (name) {
-        printf("%s : ", name);
+        printf("%s: ", name);
     }
     for(int idx = 0; idx < 16; idx ++) {
-        printf("%02X ", r.b[idx]);
+        printf("%02x ", r.b[idx]);
     }
     printf("\n");
 
@@ -47,10 +47,10 @@ void print_128(char *name, u128 r) {
 
 void print_128_16(char *name, u128 r) {
     if (name) {
-        printf("%s : ", name);
+        printf("%s: ", name);
     }
     for(int i = 0; i < 8; i++) {
-        printf("%04X ", r.s[i]);
+        printf("%04x ", r.s[i]);
     }
     printf("\n");
 }
@@ -58,10 +58,10 @@ void print_128_16(char *name, u128 r) {
 void print_lfsr(char *name, LFSR r) {
 
     if (name) {
-        printf("%s : ", name);
+        printf("%s: ", name);
     }
     for(int idx = 0; idx < 32; idx ++) {
-        printf("%02X ", r.b[idx]);
+        printf("%02x ", r.b[idx]);
     }
     printf("\n");
 }
@@ -70,10 +70,10 @@ void print_lfsr(char *name, LFSR r) {
 void print_u8(char *name, const u8 *b, int len) {
 
     if (name) {
-        printf("%s : ", name);
+        printf("%s: ", name);
     }
     for(int idx = 0; idx < len; idx ++) {
-        printf("%02X ", b[idx]);
+        printf("%02x ", b[idx]);
     }
     printf("\n");
 }

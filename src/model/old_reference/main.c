@@ -86,12 +86,14 @@ void SNOW_Vi_Testvectors(void) {
     printf("---- SNOW Vi TESTVECTORS ----\n");
     for(testidx = 0; testidx < 1; testidx++) {
         printf("Test set: %d\n",testidx + 1);
-        print_u8("Key : ", key[testidx], 32);
-        print_u8("IV  : ", iv[testidx], 16);
+        print_u8("key: ", key[testidx], 32);
+        print_u8("iv:  ", iv[testidx], 16);
+	printf("\n");
 
         SNOW_Vi_Init(key[testidx], iv[testidx]);
+	printf("\n");
 
-        printf("Output keystream : \n");
+        printf("Output keystream: \n");
         for(i = 0; i < 8; i++) {
             u128 z = SNOW_Vi_Keystream();
             print_128(0, z);
