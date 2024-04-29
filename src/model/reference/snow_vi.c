@@ -83,6 +83,31 @@ void update_lfsr(struct snow_vi_ctx *ctx) {
 }
 
 
+void update_fsm(struct snow_vi_ctx *ctx) {
+//  uint8_t next_r1[16];;
+//  uint8_t aes_in[16];
+//  uint8_t aes_out[16];
+//
+//    for (int i = 0; i < 16; i++) {
+//        next_r1[i] = ((ctx->t2[i] ^ ctx->r3[idx]) + r2.w[idx]);
+//    }
+//
+//    AESRound(r2.b, aes_out.b); //The second AES round
+//    for (int idx = 0; idx < 16; idx++) {
+//        r3.b[idx] = aes_out.b[idx];
+//    }
+//
+//    AESRound(r1.b,aes_out.b);  //The first AES round
+//    for (int idx = 0; idx < 16; idx++) {
+//        r2.b[idx] = aes_out.b[idx];
+//    }
+//
+//    for (int idx = 0; idx < 16; idx++) {
+//        r1.b[idx] = next_r1.b[sigma[idx]];
+//    }
+}
+
+
 void gen_z(struct snow_vi_ctx *ctx) {
   for (int i = 0 ; i < 8 ; i++) {
     ctx->z[i] = (ctx->t1[i] + ctx->r1[i]) ^ ctx->r2[i];
@@ -103,7 +128,6 @@ void snow_vi_init(struct snow_vi_ctx *ctx, const uint8_t *key, const uint8_t *iv
   }
 
   update_t1_t2(ctx);
-
 
   for (int i = 0 ; i < 8 ; i++) {
     ctx->r1[i] = 0;
@@ -160,14 +184,15 @@ void snow_vi_display_state(struct snow_vi_ctx *ctx) {
 	 ctx->r3[0], ctx->r3[1], ctx->r3[2], ctx->r3[3]);
   printf("\n");
 
-  printf("t1:     0x%08x 0x%08x 0x%08x 0x%08x\n",
+  printf("t1:     0x%04x 0x%04x 0x%04x 0x%04x\n",
 	 ctx->t1[0], ctx->t1[1], ctx->t1[2], ctx->t1[3]);
-  printf("t2:     0x%08x 0x%08x 0x%08x 0x%08x\n",
+  printf("t2:     0x%04x 0x%04x 0x%04x 0x%04x\n",
 	 ctx->t2[0], ctx->t2[1], ctx->t2[2], ctx->t2[3]);
   printf("\n");
 
-  printf("z:      0x%08x 0x%08x 0x%08x 0x%08x\n",
-	 ctx->z[0], ctx->z[1], ctx->z[2], ctx->z[3]);
+  printf("z:      0x%04x 0x%04x 0x%04x 0x%04x 0x%04x 0x%04x 0x%04x 0x%04x\n",
+	 ctx->z[0], ctx->z[1], ctx->z[2], ctx->z[3],
+	 ctx->z[4], ctx->z[5], ctx->z[6], ctx->z[7]);
   printf("\n");
 }
 
